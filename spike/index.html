@@ -1,0 +1,676 @@
+<title>ページ切り出し実機テスト</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+:root{
+  --paper:#F7F6F2; --card:#FFFFFF; --card-2:#FBFAF7;
+  --ink:#1E2430; --navy:#23408E; --navy-soft:#E7ECF7;
+  --redpen:#D93A2B; --red-ink:#B32C1F; --red-soft:#FAE9E6;
+  --marker:#FFE45C; --marker-ink:#1E2430;
+  --pencil:#6E747E; --line:#E3E1DA;
+  --ok:#2E7D4F; --ok-soft:#E3EFE7;
+  --on-navy:#FFFFFF; --radius:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#171A1F; --card:#1F232A; --card-2:#242932;
+    --ink:#E9E7E1; --navy:#8AA6EC; --navy-soft:#242D40;
+    --redpen:#F27767; --red-ink:#F79484; --red-soft:#38221F;
+    --marker:#E3C043; --marker-ink:#171A1F;
+    --pencil:#A2A9B4; --line:#2E333C;
+    --ok:#5FB884; --ok-soft:#1D2E24;
+    --on-navy:#12151A;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#171A1F; --card:#1F232A; --card-2:#242932;
+  --ink:#E9E7E1; --navy:#8AA6EC; --navy-soft:#242D40;
+  --redpen:#F27767; --red-ink:#F79484; --red-soft:#38221F;
+  --marker:#E3C043; --marker-ink:#171A1F;
+  --pencil:#A2A9B4; --line:#2E333C;
+  --ok:#5FB884; --ok-soft:#1D2E24;
+  --on-navy:#12151A;
+}
+*{box-sizing:border-box}
+body{
+  background:var(--paper); color:var(--ink); margin:0;
+  font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;
+  line-height:1.7; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.wrap{max-width:760px;margin:0 auto;padding:26px 18px 60px}
+header h1{font-size:clamp(21px,5vw,28px);font-weight:700;margin:0;text-wrap:balance}
+header .lede{color:var(--pencil);font-size:14px;margin:7px 0 0;max-width:60ch}
+.badge{display:inline-block;font-size:11px;letter-spacing:.09em;color:var(--navy);border:1px solid var(--navy);border-radius:999px;padding:3px 11px;margin-bottom:11px}
+
+section{margin-top:24px}
+h2{font-size:15px;font-weight:700;margin:0 0 10px;display:flex;align-items:baseline;gap:9px}
+h2 .step{font-size:11px;color:var(--pencil);border:1px solid var(--line);border-radius:999px;padding:1px 8px;flex:none}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:15px}
+
+.drop{
+  border:2px dashed var(--navy); background:var(--navy-soft); color:var(--navy);
+  border-radius:var(--radius); padding:26px 18px; text-align:center; cursor:pointer;
+  display:flex; flex-direction:column; align-items:center; gap:6px; width:100%; font:inherit;
+}
+.drop:hover{background:var(--card)}
+.drop:focus-visible{outline:2px solid var(--navy);outline-offset:3px}
+.drop .ico{font-size:32px;line-height:1}
+.drop .t{font-size:17px;font-weight:700}
+.drop .d{font-size:12.5px;color:var(--ink);opacity:.75;line-height:1.6;max-width:30ch}
+input[type=file]{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:11px;margin-top:12px}
+.opt{display:flex;flex-direction:column;gap:3px}
+.opt label{font-size:11.5px;color:var(--pencil);letter-spacing:.04em}
+.opt input[type=range]{width:100%;accent-color:var(--navy)}
+.opt .val{font-size:13px;font-weight:600}
+
+.btn{font:inherit;font-weight:700;font-size:15px;border:none;border-radius:11px;padding:14px;background:var(--navy);color:var(--on-navy);cursor:pointer;width:100%;min-height:48px;margin-top:13px}
+.btn:disabled{opacity:.4;cursor:default}
+.btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.btn.ghost{background:none;color:var(--ink);border:1px solid var(--line);font-weight:500;font-size:14px}
+
+.pbar{height:8px;border-radius:5px;background:var(--line);overflow:hidden;margin:11px 0 6px}
+.pbar i{display:block;height:100%;background:var(--navy);border-radius:5px;transition:width .15s}
+.phase{font-size:13px;color:var(--pencil)}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:9px}
+.stat{background:var(--card-2);border:1px solid var(--line);border-radius:11px;padding:10px 12px}
+.stat .k{font-size:10.5px;letter-spacing:.07em;color:var(--pencil);display:block}
+.stat .v{font-size:22px;font-weight:600;display:block;line-height:1.2}
+.stat .v small{font-size:12px;font-weight:500;margin-left:2px;color:var(--pencil)}
+.stat.bad .v{color:var(--red-ink)}
+.stat.good .v{color:var(--ok)}
+
+.verdict{border-radius:var(--radius);padding:14px 16px;display:flex;gap:11px;align-items:flex-start;font-size:14px;line-height:1.65}
+.verdict.ok{background:var(--ok-soft);border:1px solid var(--ok)}
+.verdict.ng{background:var(--red-soft);border:1px solid var(--redpen)}
+.verdict .m{font-size:19px;line-height:1.3;flex:none}
+.verdict b{display:block;font-size:15px;margin-bottom:2px}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:9px}
+.pg{position:relative;border-radius:7px;overflow:hidden;border:1px solid var(--line);background:var(--card);aspect-ratio:3/4}
+.pg img{width:100%;height:100%;object-fit:cover;display:block}
+.pg .no{position:absolute;left:3px;bottom:3px;font-size:10px;background:var(--paper);color:var(--ink);padding:0 4px;border-radius:3px}
+.pg .tag{position:absolute;top:3px;right:3px;font-size:9px;font-weight:700;padding:2px 4px;border-radius:3px;color:#fff}
+.pg.blank{opacity:.5}
+.pg.blank{border-style:dashed}
+.pg.blank .tag{background:var(--pencil)}
+.pg.dupe{border:2px dashed var(--navy)}
+.pg.dupe .tag{background:var(--navy);color:var(--on-navy)}
+
+.log{
+  background:var(--card-2);border:1px solid var(--line);border-radius:11px;padding:11px 13px;
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;line-height:1.75;
+  max-height:290px;overflow:auto;white-space:pre-wrap;word-break:break-word;color:var(--ink);
+}
+.log .e{color:var(--red-ink)}
+.log .w{color:var(--marker-ink);background:var(--marker);border-radius:3px;padding:0 3px}
+.log .g{color:var(--ok)}
+
+details{margin-top:11px}
+summary{cursor:pointer;font-size:13px;color:var(--navy);padding:6px 0}
+summary:focus-visible{outline:2px solid var(--navy);outline-offset:2px;border-radius:4px}
+
+.hint{font-size:12.5px;color:var(--pencil);line-height:1.75;margin:10px 0 0}
+.hint b{color:var(--ink)}
+ol.steps{margin:0;padding-left:20px;font-size:13.5px;line-height:1.8}
+ol.steps li{margin-bottom:5px}
+video{display:none}
+.foot{margin-top:32px;padding-top:14px;border-top:1px solid var(--line);font-size:12px;color:var(--pencil);line-height:1.8}
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="badge">ExamForge · フェーズ0</span>
+    <h1>ページ切り出し実機テスト</h1>
+    <p class="lede">プリントの束をめくった動画から、1ページずつ静止したコマを取り出せるか、このiPhoneで確かめます。動画はどこにも送られません。すべてこの端末の中だけで処理します。</p>
+  </header>
+
+  <section>
+    <h2><span class="step">1</span>動画を選ぶ</h2>
+    <button class="drop" id="pick">
+      <span class="ico" aria-hidden="true">▤</span>
+      <span class="t">めくり動画を選ぶ</span>
+      <span class="d">その場で撮ってもOK。10〜40枚を1枚ずつ止めながらめくった動画</span>
+    </button>
+    <input type="file" id="file" accept="video/*">
+
+    <div class="card" style="margin-top:12px">
+      <div class="opts">
+        <div class="opt">
+          <label for="fps">1秒あたり何回調べるか</label>
+          <input type="range" id="fps" min="2" max="8" step="1" value="4">
+          <span class="val mono"><span id="fps-v">4</span> 回/秒</span>
+        </div>
+        <div class="opt">
+          <label for="still">止まったとみなす長さ</label>
+          <input type="range" id="still" min="2" max="8" step="1" value="3">
+          <span class="val mono"><span id="still-v">0.75</span> 秒</span>
+        </div>
+        <div class="opt">
+          <label for="sens">動きの検出しやすさ</label>
+          <input type="range" id="sens" min="2" max="20" step="1" value="7">
+          <span class="val mono"><span id="sens-v">7</span></span>
+        </div>
+      </div>
+      <p class="hint">迷ったらそのままで大丈夫です。取りこぼしたら「1秒あたり」を増やしてもう一度。</p>
+    </div>
+
+    <button class="btn" id="run" disabled>切り出す</button>
+  </section>
+
+  <section id="sec-prog" hidden>
+    <h2><span class="step">2</span>処理中</h2>
+    <div class="card">
+      <div class="pbar"><i id="bar" style="width:0%"></i></div>
+      <p class="phase mono" id="phase">待機中</p>
+      <p class="hint" style="color:var(--red-ink);font-weight:600">この画面を開いたままにしてください。ほかのアプリに移ると止まります。</p>
+    </div>
+  </section>
+
+  <section id="sec-result" hidden>
+    <h2><span class="step">3</span>結果</h2>
+    <div id="verdict"></div>
+    <div class="stats" id="stats" style="margin-top:12px"></div>
+
+    <div id="pages-wrap" style="margin-top:18px">
+      <h2 style="margin-bottom:9px"><span class="step">頁</span>取り出したページ</h2>
+      <div class="grid" id="pages"></div>
+      <p class="hint" id="pages-note"></p>
+    </div>
+
+    <details open>
+      <summary>詳しい記録（うまくいかない時はここを見せてください）</summary>
+      <div class="log mono" id="log"></div>
+      <button class="btn ghost" id="copy" style="margin-top:9px">記録をコピー</button>
+    </details>
+  </section>
+
+  <section>
+    <h2><span class="step">?</span>撮り方のコツ</h2>
+    <div class="card">
+      <ol class="steps">
+        <li>紙が画面いっぱいに入るように、真上から構える</li>
+        <li><b>1枚ごとに1秒くらい止める</b>。めくる動作は速くてよい</li>
+        <li>冊子・ノートは見開きのままで1枚として撮る</li>
+        <li>手やペンが紙に重ならないようにする</li>
+        <li>2分・40枚くらいまでを1本にする</li>
+      </ol>
+    </div>
+  </section>
+
+  <p class="foot">このページは端末の中だけで動きます。動画も切り出した画像もサーバーに送られません。<br>ページを閉じると結果は消えます。</p>
+</div>
+
+<video id="vid" playsinline muted preload="auto"></video>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============================================================
+     凍結モジュール相当（07書 05_frameSelect.ts のAPIを再現）
+     すべて純粋関数。ブラウザでもNode.jsでも動く。
+     ============================================================ */
+
+  // 縮小グレースケール同士の平均絶対差（0-255）
+  function frameDiff(a, b){
+    if(!a || !b || a.length !== b.length) return 255;
+    var s = 0;
+    for(var i = 0; i < a.length; i++){ s += Math.abs(a[i] - b[i]); }
+    return s / a.length;
+  }
+
+  // 動きスコアの列 → 静止している区間 [{startIdx, endIdx}]
+  function segmentStillPeriods(scores, threshold, minLen){
+    var out = [], run = -1;
+    for(var i = 0; i < scores.length; i++){
+      if(scores[i] <= threshold){
+        if(run < 0) run = i;
+      } else {
+        if(run >= 0 && i - run >= minLen) out.push({startIdx:run, endIdx:i-1});
+        run = -1;
+      }
+    }
+    if(run >= 0 && scores.length - run >= minLen) out.push({startIdx:run, endIdx:scores.length-1});
+    return out;
+  }
+
+  // 各静止区間から代表1つ（中央）を選ぶ
+  function pickRepresentatives(periods){
+    return periods.map(function(p){ return Math.floor((p.startIdx + p.endIdx) / 2); });
+  }
+
+  // 16x16 平均ハッシュ（256bit）を16進64文字で返す。
+  // 8x8 だと同じ体裁のプリントが全部同一に見え、実測で8ページ中7ページが重複扱いになった。
+  // 差分ハッシュはさらに悪く、白地に黒インクの文書では別ページの距離が0になる。
+  var HASH_S = 16;
+  function computeDHash(gray, w, h){
+    var S = HASH_S, cell = new Float64Array(S*S), cnt = new Uint32Array(S*S);
+    for(var y = 0; y < h; y++){
+      var gy = Math.min(S-1, Math.floor(y * S / h));
+      for(var x = 0; x < w; x++){
+        var gx = Math.min(S-1, Math.floor(x * S / w));
+        var k = gy*S + gx;
+        cell[k] += gray[y*w + x]; cnt[k]++;
+      }
+    }
+    var mean = 0;
+    for(var i = 0; i < cell.length; i++){ cell[i] /= (cnt[i] || 1); mean += cell[i]; }
+    mean /= cell.length;
+    var hex = '';
+    for(var b = 0; b < cell.length; b += 4){
+      var nib = 0;
+      for(var j = 0; j < 4; j++){ if(cell[b+j] > mean) nib |= (1 << (3-j)); }
+      hex += nib.toString(16);
+    }
+    return hex;
+  }
+  var DUPE_MAX_DIST = 16;   // 実測: 同一0 / 同じ体裁の別ページ35
+
+  function hamming(h1, h2){
+    var d = 0;
+    for(var i = 0; i < h1.length; i++){
+      var x = parseInt(h1[i],16) ^ parseInt(h2[i],16);
+      while(x){ d += x & 1; x >>= 1; }
+    }
+    return d;
+  }
+
+  // 連続する近い者どうしを重複としてマークする（消さない）
+  function dedupeByHash(items, maxDist){
+    for(var i = 1; i < items.length; i++){
+      if(items[i].blank || items[i-1].blank) continue;
+      if(hamming(items[i].hash, items[i-1].hash) <= maxDist){
+        items[i].dupeOf = i - 1;
+      }
+    }
+    return items;
+  }
+
+  // 大津の二値化しきい値。紙（明るい）と机（暗い）を分ける
+  function otsuThreshold(gray){
+    var hist = new Uint32Array(256), i;
+    for(i = 0; i < gray.length; i++) hist[gray[i]]++;
+    var total = gray.length, sum = 0;
+    for(var t = 0; t < 256; t++) sum += t * hist[t];
+    var sumB = 0, wB = 0, best = 0, bestVar = -1;
+    for(t = 0; t < 256; t++){
+      wB += hist[t];
+      if(wB === 0) continue;
+      var wF = total - wB;
+      if(wF === 0) break;
+      sumB += t * hist[t];
+      var mB = sumB / wB, mF = (sum - sumB) / wF;
+      var v = wB * wF * (mB - mF) * (mB - mF);
+      if(v > bestVar){ bestVar = v; best = t; }
+    }
+    return best;
+  }
+
+  // 紙が写っている矩形を推定する。
+  // 机ごと解析すると、ハッシュが「紙の位置」しか見ず全ページ同じに見え、
+  // 白紙判定も机をインクと数えて必ず外れる（どちらも実測で確認済み）。
+  function findPaperBox(gray, w, h){
+    var full = {x0:0, y0:0, x1:w, y1:h};
+    var t = otsuThreshold(gray);
+    var rows = new Uint32Array(h), cols = new Uint32Array(w), bright = 0;
+    for(var y = 0; y < h; y++){
+      for(var x = 0; x < w; x++){
+        if(gray[y*w + x] > t){ rows[y]++; cols[x]++; bright++; }
+      }
+    }
+    if(bright > w*h*0.92) return full;   // 画面いっぱいが紙
+    if(bright < w*h*0.05) return full;   // 紙が写っていない
+    function span(profile, len, limit){
+      var need = limit * 0.3, a = 0, b = len - 1;
+      while(a < len && profile[a] < need) a++;
+      while(b > a && profile[b] < need) b--;
+      return [a, b + 1];
+    }
+    var sy = span(rows, h, w), sx = span(cols, w, h);
+    if(sx[1]-sx[0] < w*0.15 || sy[1]-sy[0] < h*0.15) return full;
+    return {x0:sx[0], y0:sy[0], x1:sx[1], y1:sy[1]};
+  }
+
+  function cropGray(gray, w, box){
+    var cw = box.x1 - box.x0, ch = box.y1 - box.y0;
+    var out = new Uint8Array(cw*ch);
+    for(var y = 0; y < ch; y++){
+      var src = (box.y0 + y)*w + box.x0;
+      out.set(gray.subarray(src, src + cw), y*cw);
+    }
+    return out;
+  }
+
+  // 「文字らしさ」。**紙の領域だけを渡すこと。**
+  function inkRatio(gray){
+    if(gray.length === 0) return 0;
+    var hist = new Uint32Array(256), i;
+    for(i = 0; i < gray.length; i++) hist[gray[i]]++;
+    var acc = 0, p90 = 255, target = gray.length * 0.9;
+    for(var v = 0; v < 256; v++){ acc += hist[v]; if(acc >= target){ p90 = v; break; } }
+    var min = 255;
+    for(i = 0; i < gray.length; i++) if(gray[i] < min) min = gray[i];
+    if(p90 - min < 18) return 0;
+    var cut = p90 * 0.72, n = 0;
+    for(i = 0; i < gray.length; i++){ if(gray[i] < cut) n++; }
+    return n / gray.length;
+  }
+
+  /* ============================================================
+     I/O層（ブラウザ専用）
+     ============================================================ */
+
+  var $ = function(id){ return document.getElementById(id); };
+  var vid = $('vid'), fileInput = $('file');
+  var logEl = $('log');
+  var t0 = 0;
+
+  function log(msg, cls){
+    var t = ((performance.now() - t0)/1000).toFixed(2);
+    var line = document.createElement('span');
+    if(cls) line.className = cls;
+    line.textContent = '[' + t + 's] ' + msg + '\n';
+    logEl.appendChild(line);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  /* 解析用の小さいキャンバス（使い回す。メモリ対策） */
+  var AW = 160, AH = 0;
+  var aCan = document.createElement('canvas'), aCtx = aCan.getContext('2d', {willReadFrequently:true});
+  /* 書き出し用（使い回す） */
+  var oCan = document.createElement('canvas'), oCtx = oCan.getContext('2d');
+
+  function grabGray(){
+    aCtx.drawImage(vid, 0, 0, AW, AH);
+    var d = aCtx.getImageData(0, 0, AW, AH).data;
+    var g = new Uint8Array(AW*AH), allZero = true;
+    for(var i = 0, p = 0; i < d.length; i += 4, p++){
+      g[p] = (d[i]*299 + d[i+1]*587 + d[i+2]*114) / 1000;
+      if(d[i+3] !== 0) allZero = false;
+    }
+    return {gray:g, transparent:allZero};
+  }
+
+  /* iOS Safari 安全策: seeked のあと更に待たないと前のコマを掴む */
+  function seekTo(t){
+    return new Promise(function(resolve, reject){
+      var done = false;
+      var to = setTimeout(function(){ if(!done){ done = true; cleanup(); reject(new Error('seek timeout @' + t.toFixed(2))); } }, 6000);
+      function onSeeked(){
+        if(done) return;
+        done = true; clearTimeout(to); cleanup();
+        setTimeout(resolve, 90);   // ← ここが要。80-100ms 待つ
+      }
+      function cleanup(){ vid.removeEventListener('seeked', onSeeked); }
+      vid.addEventListener('seeked', onSeeked);
+      try { vid.currentTime = t; } catch(err){ done = true; clearTimeout(to); cleanup(); reject(err); }
+    });
+  }
+
+  function exportJPEG(maxEdge, quality){
+    var vw = vid.videoWidth, vh = vid.videoHeight;
+    var scale = Math.min(1, maxEdge / Math.max(vw, vh));
+    var w = Math.round(vw*scale), h = Math.round(vh*scale);
+    oCan.width = w; oCan.height = h;
+    oCtx.drawImage(vid, 0, 0, w, h);
+    return new Promise(function(res){
+      oCan.toBlob(function(b){ res(b); }, 'image/jpeg', quality);
+    });
+  }
+
+  function releaseCanvas(c){ c.width = 0; c.height = 0; }
+
+  /* ---------- UI ---------- */
+  var chosen = null, urls = [];
+  var fpsEl = $('fps'), stillEl = $('still'), sensEl = $('sens');
+
+  function syncOpts(){
+    $('fps-v').textContent = fpsEl.value;
+    $('still-v').textContent = (Number(stillEl.value) / Number(fpsEl.value)).toFixed(2);
+    $('sens-v').textContent = sensEl.value;
+  }
+  fpsEl.addEventListener('input', syncOpts);
+  stillEl.addEventListener('input', syncOpts);
+  sensEl.addEventListener('input', syncOpts);
+  syncOpts();
+
+  $('pick').addEventListener('click', function(){ fileInput.click(); });
+
+  fileInput.addEventListener('change', function(){
+    var f = fileInput.files && fileInput.files[0];
+    if(!f) return;
+    chosen = f;
+    $('pick').querySelector('.t').textContent = f.name.length > 26 ? f.name.slice(0,24) + '…' : f.name;
+    $('pick').querySelector('.d').textContent = (f.size/1024/1024).toFixed(1) + ' MB · タップで選び直す';
+    $('run').disabled = false;
+  });
+
+  function setProgress(pct, phase){
+    $('bar').style.width = Math.round(pct) + '%';
+    $('phase').textContent = phase;
+  }
+
+  $('run').addEventListener('click', function(){ run().catch(function(e){ fail(e); }); });
+
+  function fail(e){
+    log('中断: ' + (e && e.message ? e.message : e), 'e');
+    $('sec-result').hidden = false;
+    $('verdict').innerHTML = '<div class="verdict ng"><span class="m">✕</span><span><b>切り出せませんでした</b>'
+      + (e && e.message ? String(e.message).replace(/</g,'&lt;') : '') + '</span></div>';
+    $('run').disabled = false;
+  }
+
+  async function run(){
+    $('run').disabled = true;
+    $('sec-prog').hidden = false;
+    $('sec-result').hidden = true;
+    $('pages').innerHTML = '';
+    logEl.textContent = '';
+    urls.forEach(URL.revokeObjectURL); urls = [];
+    t0 = performance.now();
+
+    log('端末: ' + navigator.userAgent);
+    log('ファイル: ' + chosen.name + ' / ' + (chosen.size/1024/1024).toFixed(1) + 'MB / ' + (chosen.type || '不明'));
+
+    var url = URL.createObjectURL(chosen);
+    urls.push(url);
+    vid.src = url;
+
+    setProgress(2, '動画を読み込んでいます');
+    await new Promise(function(res, rej){
+      var to = setTimeout(function(){ rej(new Error('動画を読み込めませんでした（10秒待っても情報が取れない）')); }, 10000);
+      vid.addEventListener('loadeddata', function h(){ clearTimeout(to); vid.removeEventListener('loadeddata', h); res(); });
+      vid.addEventListener('error', function h(){ clearTimeout(to); rej(new Error('この形式の動画は開けませんでした')); });
+      vid.load();
+    });
+
+    var dur = vid.duration, vw = vid.videoWidth, vh = vid.videoHeight;
+
+    /* 一部の動画は duration が Infinity で返る。末尾までシークさせて確定させる。 */
+    if(!isFinite(dur) || dur <= 0){
+      log('長さが取れないので、末尾までシークして測ります', 'w');
+      dur = await new Promise(function(res){
+        var to = setTimeout(function(){ cleanup(); res(vid.duration); }, 4000);
+        function onChange(){
+          if(vid.duration !== Infinity && vid.duration > 0){
+            clearTimeout(to); cleanup();
+            var d = vid.duration;
+            vid.currentTime = 0;
+            res(d);
+          }
+        }
+        function cleanup(){ vid.removeEventListener('durationchange', onChange); }
+        vid.addEventListener('durationchange', onChange);
+        vid.currentTime = 1e101;
+      });
+    }
+    if(!isFinite(dur) || dur <= 0) throw new Error('動画の長さが取れませんでした');
+    AH = Math.max(1, Math.round(AW * vh / vw));
+    aCan.width = AW; aCan.height = AH;
+    log('長さ ' + dur.toFixed(1) + '秒 / ' + vw + '×' + vh + ' / 解析は ' + AW + '×' + AH, 'g');
+
+    var fps = Number(fpsEl.value);
+    var step = 1 / fps;
+    var N = Math.floor(dur / step);
+    if(N > 900){ log('サンプル数が多すぎるので上限900に丸めます', 'w'); N = 900; step = dur / N; }
+    log('サンプル ' + N + '回（' + step.toFixed(3) + '秒ごと）');
+
+    /* ---- pass 1: 動きスコア ---- */
+    var scores = [], times = [], hashes = [], inks = [], boxes = [];
+    var prev = null, transparentHits = 0, seekMs = [];
+
+    for(var i = 0; i < N; i++){
+      var t = Math.min(dur - 0.02, i * step);
+      var s0 = performance.now();
+      await seekTo(t);
+      seekMs.push(performance.now() - s0);
+      var g = grabGray();
+      if(g.transparent){ transparentHits++; }
+      scores.push(frameDiff(prev, g.gray));
+      times.push(t);
+      // 机を除いた紙の部分だけでハッシュと文字量を測る
+      var box = findPaperBox(g.gray, AW, AH);
+      var paper = cropGray(g.gray, AW, box);
+      boxes.push(box);
+      hashes.push(computeDHash(paper, box.x1-box.x0, box.y1-box.y0));
+      inks.push(inkRatio(paper));
+      prev = g.gray;
+      if(i % 5 === 0 || i === N-1){
+        setProgress(4 + (i/N)*66, '動きを調べています ' + (i+1) + ' / ' + N);
+        await new Promise(function(r){ setTimeout(r, 0); });
+      }
+    }
+
+    var avgSeek = seekMs.reduce(function(a,b){return a+b;},0) / seekMs.length;
+    log('シーク平均 ' + avgSeek.toFixed(0) + 'ms / 最大 ' + Math.max.apply(null, seekMs).toFixed(0) + 'ms');
+    if(transparentHits > 0) log('透明なコマ ' + transparentHits + '回（iOSの既知の症状）', 'w');
+
+    /* ---- 静止区間 ---- */
+    var thr = Number(sensEl.value);
+    var minLen = Number(stillEl.value);
+    var periods = segmentStillPeriods(scores.slice(1), thr, minLen).map(function(p){
+      return {startIdx:p.startIdx+1, endIdx:p.endIdx+1};
+    });
+    log('静止区間 ' + periods.length + '個（しきい値 ' + thr + ' / 最短 ' + minLen + 'サンプル）', 'g');
+
+    if(periods.length === 0){
+      throw new Error('止まっているコマが見つかりませんでした。「動きの検出しやすさ」を大きくするか、1枚ずつもう少し長く止めて撮ってみてください。');
+    }
+
+    var reps = pickRepresentatives(periods);
+
+    /* ---- pass 2: 代表コマを書き出す ---- */
+    var items = [];
+    for(var k = 0; k < reps.length; k++){
+      var idx = reps[k];
+      setProgress(72 + (k/reps.length)*26, 'ページを書き出しています ' + (k+1) + ' / ' + reps.length);
+      await seekTo(times[idx]);
+      var blob = await exportJPEG(1600, 0.82);
+      items.push({
+        time: times[idx],
+        hash: hashes[idx],
+        ink: inks[idx],
+        blank: inks[idx] < 0.012,
+        bytes: blob ? blob.size : 0,
+        url: blob ? URL.createObjectURL(blob) : null
+      });
+      if(blob) urls.push(items[items.length-1].url);
+      await new Promise(function(r){ setTimeout(r, 0); });
+    }
+
+    dedupeByHash(items, DUPE_MAX_DIST);
+    releaseCanvas(oCan);
+
+    var elapsed = (performance.now() - t0)/1000;
+    var blanks = items.filter(function(x){ return x.blank; }).length;
+    var dupes = items.filter(function(x){ return x.dupeOf != null; }).length;
+    var real = items.length - blanks - dupes;
+
+    log('書き出し ' + items.length + '枚 / 白紙 ' + blanks + ' / 重複 ' + dupes + ' / 実質 ' + real, 'g');
+    log('合計 ' + elapsed.toFixed(1) + '秒', 'g');
+
+    setProgress(100, '完了');
+    render(items, elapsed, avgSeek, transparentHits, dur);
+    $('run').disabled = false;
+  }
+
+  function render(items, elapsed, avgSeek, transparentHits, dur){
+    $('sec-result').hidden = false;
+
+    var blanks = items.filter(function(x){ return x.blank; }).length;
+    var dupes = items.filter(function(x){ return x.dupeOf != null; }).length;
+    var real = items.length - blanks - dupes;
+    var perPage = items.length ? elapsed / items.length : 0;
+
+    var ok = items.length >= 3 && transparentHits === 0 && items.every(function(x){ return x.bytes > 2000; });
+    $('verdict').innerHTML = ok
+      ? '<div class="verdict ok"><span class="m">✓</span><span><b>このiPhoneで切り出せます</b>'
+        + real + '枚のページを取り出しました。下の画像が実物と合っているか見てください。</span></div>'
+      : '<div class="verdict ng"><span class="m">!</span><span><b>あやしい結果です</b>'
+        + (transparentHits ? '透明なコマが出ました。' : '')
+        + '下の画像とページ数を確かめて、記録を見せてください。</span></div>';
+
+    var st = [
+      ['取り出したページ', real + '', '枚', real >= 3 ? 'good' : 'bad'],
+      ['白紙とみた', blanks + '', '枚', ''],
+      ['重複とみた', dupes + '', '枚', ''],
+      ['かかった時間', elapsed.toFixed(0), '秒', elapsed > 180 ? 'bad' : 'good'],
+      ['1枚あたり', perPage.toFixed(1), '秒', ''],
+      ['動画の長さ', dur.toFixed(0), '秒', '']
+    ];
+    $('stats').innerHTML = st.map(function(s){
+      return '<div class="stat ' + s[3] + '"><span class="k">' + s[0] + '</span>'
+        + '<span class="v mono">' + s[1] + '<small>' + s[2] + '</small></span></div>';
+    }).join('');
+
+    var g = $('pages');
+    g.innerHTML = '';
+    items.forEach(function(it, i){
+      var d = document.createElement('div');
+      d.className = 'pg' + (it.blank ? ' blank' : '') + (it.dupeOf != null ? ' dupe' : '');
+      var tag = it.blank ? '白紙' : (it.dupeOf != null ? '重複' : '');
+      d.innerHTML = (it.url ? '<img src="' + it.url + '" alt="' + (i+1) + '枚目" loading="lazy">' : '')
+        + '<span class="no mono">' + (i+1) + '</span>'
+        + (tag ? '<span class="tag">' + tag + '</span>' : '');
+      g.appendChild(d);
+    });
+
+    $('pages-note').innerHTML = '実物の束は何枚でしたか？ <b>' + real + '枚</b>と合っていれば成功です。'
+      + (blanks ? '<br>白紙' + blanks + '枚は裏面か、めくる途中の机だと思われます。' : '');
+  }
+
+  /* 検証用の入口。合成動画を流し込んで通しで動かすために使う。 */
+  window.__spike = {
+    setFile: function(f){ chosen = f; $('run').disabled = false; },
+    run: function(){ return run(); },
+    setOpts: function(o){
+      if(o.fps != null) fpsEl.value = o.fps;
+      if(o.still != null) stillEl.value = o.still;
+      if(o.sens != null) sensEl.value = o.sens;
+      syncOpts();
+    },
+    log: function(){ return logEl.textContent; }
+  };
+
+  $('copy').addEventListener('click', function(){
+    var t = logEl.textContent;
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(function(){ $('copy').textContent = 'コピーしました'; });
+    } else {
+      var ta = document.createElement('textarea');
+      ta.value = t; document.body.appendChild(ta); ta.select();
+      try{ document.execCommand('copy'); $('copy').textContent = 'コピーしました'; }catch(e){}
+      document.body.removeChild(ta);
+    }
+  });
+})();
+</script>

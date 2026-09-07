@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F7F6F2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#171A1F" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ExamForge">
+<title>ExamForge</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ============ ホーム ============ -->
+  <section class="screen on" id="s-home">
+    <div class="head">
+      <div>
+        <div class="eyebrow" id="home-date">—</div>
+        <h1 class="title">ExamForge</h1>
+      </div>
+      <button class="btn ghost" id="to-settings" style="width:auto;min-height:38px;padding:8px 12px;font-size:13px">設定</button>
+    </div>
+    <div class="body">
+      <div id="home-exam"></div>
+
+      <button class="inbox" id="to-triage">
+        <span>
+          <span class="k">未整理</span>
+          <span class="n mono" id="home-pending">0<small>件</small></span>
+          <span class="s" id="home-eta">撮ったものはここに溜まります</span>
+        </span>
+        <span class="chev" aria-hidden="true">›</span>
+      </button>
+
+      <p class="sec-label">たまっている分（テスト日順）</p>
+      <div class="card" id="home-subjects"></div>
+
+      <div class="card">
+        <div class="row">
+          <span style="font-size:13px">PCに送った</span>
+          <span class="mono" style="font-size:13px" id="home-synced">0ページ</span>
+        </div>
+        <p class="muted" style="margin-top:6px">問題づくりはPCのClaudeで。「化学の電池、記述で5問」と頼む。</p>
+      </div>
+    </div>
+    <div class="foot">
+      <button class="btn" id="to-capture">撮る</button>
+    </div>
+  </section>
+
+  <!-- ============ 撮る ============ -->
+  <section class="screen" id="s-capture">
+    <div class="head">
+      <div>
+        <button class="back" data-go="s-home">‹ ホーム</button>
+        <h1 class="title">撮る</h1>
+        <div class="eyebrow" style="margin-top:2px">撮るだけ。あとは電車で</div>
+      </div>
+    </div>
+    <div class="body">
+      <button class="cap-main" id="btn-video">
+        <span class="ico" aria-hidden="true">▤</span>
+        <span class="t">めくり動画</span>
+        <span class="d">束をパラパラめくって1本。冊子は見開きのままでOK</span>
+      </button>
+      <div class="cap-sub">
+        <button class="cap-s" id="btn-photo">
+          <span class="ico" aria-hidden="true">▣</span>
+          <span class="t">写真</span>
+          <span class="d">板書・1枚だけ</span>
+        </button>
+        <button class="cap-s" id="btn-audio" disabled style="opacity:.45">
+          <span class="ico" aria-hidden="true">◍</span>
+          <span class="t">録音</span>
+          <span class="d">まだ対応していません</span>
+        </button>
+      </div>
+      <div class="card row">
+        <span style="font-size:13px;color:var(--pencil)">未整理</span>
+        <span class="mono" style="font-size:13px" id="cap-pending">0件</span>
+      </div>
+    </div>
+    <div class="foot">
+      <p class="muted">止めたあと、その場で1〜3分だけページの切り出しをします。画面を開いたままにしてください。</p>
+    </div>
+    <input type="file" id="file-video" accept="video/*" hidden>
+    <input type="file" id="file-photo" accept="image/*" hidden multiple>
+  </section>
+
+  <!-- ============ 整理 ============ -->
+  <section class="screen" id="s-triage">
+    <div class="head">
+      <div>
+        <button class="back" data-go="s-home">‹ ホーム</button>
+        <h1 class="title">整理</h1>
+      </div>
+      <span class="pill" id="triage-remaining">残り0件</span>
+    </div>
+    <div class="body" id="triage-body"></div>
+    <div class="foot" id="triage-foot"></div>
+  </section>
+
+  <!-- ============ ページ確認 ============ -->
+  <section class="screen" id="s-pages">
+    <div class="head">
+      <div>
+        <button class="back" data-go="s-triage">‹ 整理</button>
+        <h1 class="title">ページ確認</h1>
+        <div class="eyebrow" style="margin-top:2px" id="pages-sub">—</div>
+      </div>
+    </div>
+    <div class="body">
+      <div id="pages-match"></div>
+      <div class="taskbar">
+        <span>
+          <span class="t" id="pages-tasktitle">見るのは0枚</span>
+          <span class="d">途中でやめても続きから</span>
+        </span>
+        <span class="prog mono" id="pages-prog">0/0</span>
+      </div>
+      <div class="grid" id="pages-grid"></div>
+      <p class="muted">並び順は撮った順のまま。入れ替えは要りません。</p>
+    </div>
+    <div class="foot">
+      <button class="btn" id="pages-next">次の要確認へ →</button>
+      <button class="btn ghost" id="pages-done">PCに送る</button>
+    </div>
+  </section>
+
+  <!-- ============ 見る ============ -->
+  <section class="screen" id="s-read">
+    <div class="head">
+      <div>
+        <button class="back" data-go="s-home">‹ ホーム</button>
+        <h1 class="title" id="read-title">—</h1>
+        <div class="eyebrow" style="margin-top:2px" id="read-sub">—</div>
+      </div>
+    </div>
+    <div class="body">
+      <button class="hero" id="read-hero"><img id="read-img" alt=""></button>
+      <div class="pagenav">
+        <button type="button" id="read-prev">‹ 前</button>
+        <span class="pos mono"><span id="read-pos">1</span> / <span id="read-total">1</span></span>
+        <button type="button" id="read-next">次 ›</button>
+      </div>
+      <p class="muted">文字起こしはしていません。PCのClaudeがこの画像を直接読みます。<br>崩れる数式や図も、そのまま渡ります。</p>
+    </div>
+    <div class="foot">
+      <button class="btn" data-go="s-home">ホームへ</button>
+    </div>
+  </section>
+
+  <!-- ============ 設定 ============ -->
+  <section class="screen" id="s-settings">
+    <div class="head">
+      <div>
+        <button class="back" data-go="s-home">‹ ホーム</button>
+        <h1 class="title">設定</h1>
+        <div class="eyebrow" style="margin-top:2px">1回だけ入れれば、あとは触りません</div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="card">
+        <p class="sec-label" style="margin:0 0 9px">PCへの送り先</p>
+        <div style="display:flex;flex-direction:column;gap:11px">
+          <div class="field"><label for="set-owner">GitHubのユーザー名</label><input id="set-owner" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="例: ryuto"></div>
+          <div class="field"><label for="set-repo">リポジトリ名（プライベート）</label><input id="set-repo" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="例: examforge-data"></div>
+          <div class="field"><label for="set-token">アクセストークン</label><input id="set-token" type="password" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="github_pat_..."></div>
+          <p class="muted" id="set-tokenstate">未設定</p>
+        </div>
+      </div>
+      <button class="btn" id="set-save">保存してつながるか試す</button>
+      <div id="set-result"></div>
+
+      <div class="card">
+        <p class="sec-label" style="margin:0 0 9px">テスト日</p>
+        <div id="set-subjects"></div>
+        <button class="btn ghost" id="set-add-subject" style="margin-top:10px">科目を足す</button>
+      </div>
+
+      <div class="card">
+        <p class="sec-label" style="margin:0 0 9px">はじめての準備</p>
+        <ol class="steps">
+          <li>GitHubで<strong>プライベートリポジトリ</strong>を1つ作る（例: <code>examforge-data</code>）。READMEを付けて作ること</li>
+          <li>Settings → Developer settings → <strong>Fine-grained tokens</strong> で新しいトークンを作る</li>
+          <li>対象リポジトリはそれ1つだけ。権限は <code>Contents: Read and write</code> のみ</li>
+          <li>できたトークンを上に貼って保存</li>
+        </ol>
+        <p class="muted" style="margin-top:8px">トークンはこのiPhoneの中だけに入ります。アプリのコードにもGitHubにも入りません。いつでも取り消せます。</p>
+      </div>
+
+      <div class="card">
+        <div class="row"><span style="font-size:13px">端末の使用量</span><span class="mono" style="font-size:13px" id="set-usage">—</span></div>
+        <button class="btn ghost" id="set-purge" style="margin-top:10px">送信済みの古いものを消す</button>
+      </div>
+    </div>
+    <div class="foot">
+      <button class="btn ghost" data-go="s-home">閉じる</button>
+    </div>
+  </section>
+
+  <!-- ============ 覆い ============ -->
+  <div class="ov" id="ov-count">
+    <div class="ov-in">
+      <span class="eyebrow">教室で、紙が手元にあるうちに</span>
+      <h2>束は何枚ありましたか？</h2>
+      <p class="muted">冊子・ノートは見開きで1枚と数えてください</p>
+      <div class="bigstep">
+        <button type="button" id="cnt-minus" aria-label="1枚減らす">−</button>
+        <span class="v mono" id="cnt-val" aria-live="polite">10</span>
+        <button type="button" id="cnt-plus" aria-label="1枚増やす">+</button>
+      </div>
+      <button class="btn" id="cnt-ok">この枚数で進む</button>
+      <button class="btn ghost" id="cnt-skip">数えられなかった</button>
+    </div>
+  </div>
+
+  <div class="ov" id="ov-work">
+    <div class="ov-in">
+      <span class="eyebrow" id="work-phase">ページを切り出しています</span>
+      <span class="big mono" id="work-count">0 / 0</span>
+      <div class="pbar"><i id="work-bar" style="width:0%"></i></div>
+      <p class="muted" id="work-note">—</p>
+      <p class="keep" id="work-keep">この画面を開いたままにしてください。<br>ほかのアプリに移ると止まります。</p>
+    </div>
+  </div>
+
+  <div class="sheet" id="sheet">
+    <span class="grabber" aria-hidden="true"></span>
+    <div id="sheet-in"></div>
+  </div>
+
+  <div class="toast" id="toast"><span></span><button type="button" hidden>取り消す</button></div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

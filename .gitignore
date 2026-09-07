@@ -1,0 +1,8 @@
+node_modules/
+.DS_Store
+Thumbs.db
+*.log
+
+# 端末に閉じた設定はコードに入れない。トークンは localStorage にのみ置く。
+.env
+.env.local

@@ -6,6 +6,6 @@
   "description": "紙・板書を Claude が読める状態にするまでの取り込み専用PWA。ビルド手順なし・依存なし。",
   "scripts": {
     "test": "node --test \"test/*.test.mjs\"",
-    "serve": "node --run-serve || npx --yes serve app"
+    "serve": "node dev-server.mjs"
   }
 }

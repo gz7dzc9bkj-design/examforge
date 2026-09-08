@@ -6,3 +6,6 @@ Thumbs.db
 # 端末に閉じた設定はコードに入れない。トークンは localStorage にのみ置く。
 .env
 .env.local
+
+# 実機検証用の動画。個人の資料なので入れない。
+_realtest.mp4

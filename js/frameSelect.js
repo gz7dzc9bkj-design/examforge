@@ -252,3 +252,28 @@ export const BLANK_INK_THRESHOLD = 0.012;
  * ここを上げすぎると、同じ体裁のプリントが全部重複になる（過去に踏んだ）。
  */
 export const DUPE_MAX_DIST = 16;
+
+/**
+ * 動きのしきい値を、その動画自身から決める。
+ *
+ * 固定値では実機の動画に通用しなかった。合成動画は完全に静止するので 7 で足りたが、
+ * **手に持って撮った実際の動画は微ブレで下限が 3.8、静止中でも 5〜12 まで揺れる**。
+ * 固定 7 では「止まっているコマが1つも無い」となり、1ページも取れなかった（実測）。
+ *
+ * 実測の分布（11秒・見開き6枚・手持ち）:
+ *   最小 3.8 / 中央値 9.4 / めくり中 16〜31 / 最大 38.9
+ * 静止帯とめくり帯のあいだに谷があり、中央値の 1.2〜1.4 倍がそこに入る。
+ * この幅では結果が動かない（どれも6区間）ので、真ん中の 1.3 を採る。
+ *
+ * 相対値だけだと「ずっと動いている動画」で誤って静止を見つけてしまうため、
+ * 上下に歯止めを付ける。
+ *
+ * @param {number[]} scores 動きスコア列（先頭の番兵 255 は自動で除く）
+ */
+export function adaptiveMotionThreshold(scores, factor = 1.3, floor = 4, ceil = 40) {
+  const valid = scores.filter((s) => s < 255);
+  if (valid.length < 4) return floor;
+  const sorted = [...valid].sort((a, b) => a - b);
+  const median = sorted[Math.floor(sorted.length / 2)];
+  return Math.min(ceil, Math.max(floor, median * factor));
+}

@@ -21,6 +21,7 @@ import {
   inkRatio,
   findPaperBox,
   cropGray,
+  adaptiveMotionThreshold,
   BLANK_INK_THRESHOLD,
   DUPE_MAX_DIST,
 } from './frameSelect.js';
@@ -36,7 +37,9 @@ const MAX_SAMPLES = 900;
 export const DEFAULTS = {
   fps: 4, // 1秒あたり何回調べるか
   minStillSamples: 3, // 何サンプル続けて止まったら1ページとみなすか
-  motionThreshold: 7, // これ以下なら「止まっている」
+  // これ以下なら「止まっている」。null なら動画ごとに自動で決める。
+  // 固定値は実機の手ブレに通用しなかった（frameSelect の adaptiveMotionThreshold 参照）。
+  motionThreshold: null,
 };
 
 /** duration が Infinity で返る動画のために、末尾までシークして長さを確定させる。 */
@@ -219,9 +222,10 @@ export async function extractPages(file, options = {}, onProgress = () => {}) {
 
     /* ---- 静止区間 → 代表コマ ---- */
     // 先頭は前フレームが無く常に最大値なので、比較対象から外して番号を戻す
+    const motionThreshold = opt.motionThreshold ?? adaptiveMotionThreshold(scores);
     const periods = segmentStillPeriods(
       scores.slice(1),
-      opt.motionThreshold,
+      motionThreshold,
       opt.minStillSamples
     ).map((p) => ({ startIdx: p.startIdx + 1, endIdx: p.endIdx + 1 }));
 
@@ -273,6 +277,7 @@ export async function extractPages(file, options = {}, onProgress = () => {}) {
       videoHeight: vh,
       samples: sampleCount,
       fps: opt.fps,
+      motionThreshold: Number(motionThreshold.toFixed(2)),
       stillPeriods: periods.length,
       transparentFrames,
       avgSeekMs: seekMs.reduce((a, b) => a + b, 0) / seekMs.length,

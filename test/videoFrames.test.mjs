@@ -50,6 +50,12 @@ test('pagesNeedingReview: 白紙・薄い・重複だけを拾う', () => {
   assert.ok(!need.includes(pages[4]));
 });
 
-test('DEFAULTS: 実機テストで詰めた値から動かない', () => {
-  assert.deepEqual(DEFAULTS, { fps: 4, minStillSamples: 3, motionThreshold: 7 });
+test('DEFAULTS: 動きのしきい値は固定しない（実機で1ページも取れなかったため）', () => {
+  assert.equal(DEFAULTS.fps, 4);
+  assert.equal(DEFAULTS.minStillSamples, 3);
+  assert.equal(
+    DEFAULTS.motionThreshold,
+    null,
+    '固定値に戻すと、手持ち撮影の微ブレで静止コマが1つも見つからなくなる'
+  );
 });

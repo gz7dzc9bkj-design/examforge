@@ -11,6 +11,7 @@ import {
   otsuThreshold,
   findPaperBox,
   cropGray,
+  adaptiveMotionThreshold,
   BLANK_INK_THRESHOLD,
   DUPE_MAX_DIST,
 } from '../js/frameSelect.js';
@@ -267,4 +268,46 @@ test('通し: 8ページぶんの動きスコアから8枚を取り出す', () =
   const periods = segmentStillPeriods(scores, 6, 3);
   assert.equal(periods.length, 8, `8区間を期待, 実際 ${periods.length}`);
   assert.equal(pickRepresentatives(periods).length, 8);
+});
+
+/* ---------------- adaptiveMotionThreshold ---------------- */
+
+test('adaptiveMotionThreshold: 先頭の番兵255を無視する', () => {
+  const t = adaptiveMotionThreshold([255, 10, 10, 10, 10]);
+  assert.equal(t, 13, '中央値10 x1.3');
+});
+
+test('adaptiveMotionThreshold: 実機の分布で、静止帯とめくり帯の谷に入る', () => {
+  // 2026-09-08 の実測（手持ち・見開き6枚・11秒）を写したもの。
+  // 静止中でも 5〜12 まで揺れ、めくり中は 16〜31。
+  const still = [6.7, 7.4, 9.4, 10.0, 6.3, 6.6, 7.5, 6.8, 8.3, 7.2, 6.8, 6.1, 8.4, 8.1, 5.7, 9.7, 5.5, 7.7];
+  const flip = [18.2, 26.3, 30.1, 28.6, 23.7, 16.6, 20.8, 25.0, 30.2, 21.6];
+  const t = adaptiveMotionThreshold([255, ...still, ...flip]);
+  assert.ok(t > Math.max(...still), `静止帯(最大${Math.max(...still)})より上であるべき。実際 ${t}`);
+  assert.ok(t < Math.min(...flip), `めくり帯(最小${Math.min(...flip)})より下であるべき。実際 ${t}`);
+});
+
+test('adaptiveMotionThreshold: 固定7ではこの実機データが1区間も取れない（回帰防止）', () => {
+  const still = [6.7, 7.4, 9.4, 10.0, 6.3, 6.6, 7.5, 6.8, 8.3];
+  const flip = [18.2, 26.3, 30.1];
+  const scores = [...still, ...flip, ...still];
+  assert.equal(segmentStillPeriods(scores, 7, 3).length, 0, '固定7では取れない');
+  const t = adaptiveMotionThreshold([255, ...scores]);
+  assert.ok(segmentStillPeriods(scores, t, 3).length >= 2, `自動なら取れる。しきい値 ${t}`);
+});
+
+test('adaptiveMotionThreshold: 完全に静止した合成動画でも壊れない', () => {
+  const scores = [255, 1, 2, 1, 2, 55, 60, 1, 2, 1, 2];
+  const t = adaptiveMotionThreshold(scores);
+  assert.ok(t < 55, '静止1-2とめくり55を分けられる');
+  assert.equal(segmentStillPeriods(scores.slice(1), t, 3).length, 2);
+});
+
+test('adaptiveMotionThreshold: 上下に歯止めがある', () => {
+  assert.equal(adaptiveMotionThreshold([255, 0, 0, 0, 0]), 4, '下限4');
+  assert.equal(adaptiveMotionThreshold([255, 200, 200, 200, 200]), 40, '上限40');
+});
+
+test('adaptiveMotionThreshold: サンプルが少なすぎるときは下限を返す', () => {
+  assert.equal(adaptiveMotionThreshold([255, 9]), 4);
 });
